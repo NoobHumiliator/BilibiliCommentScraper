@@ -1,0 +1,3 @@
+functions:
+  click_like: True
+  scrap: False

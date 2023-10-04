@@ -1,3 +1,6 @@
+import random
+
+import yaml
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
@@ -22,11 +25,24 @@ import tempfile
 import shutil
 from xpath_soup import xpath_soup
 
+
+global_settings = {}
+
+with open("config.yaml", "rb") as fp:
+    yconfig = yaml.safe_load(fp)
+    global_settings["click_like"] = yconfig["functions"]["click_like"]
+    global_settings["scrap"] = yconfig["functions"]["scrap"]
+
 def write_error_log(message):
     with open("video_errorlist.txt", "a") as file:
         file.write(message + "\n")
 
 def save_progress(progress):
+
+    #如果爬虫功能未启用，不写进度
+    if not global_settings["scrap"]:
+        return
+
     max_retries = 50
     retries = 0
 
@@ -220,6 +236,10 @@ def scroll_to_bottom(driver):
         print(f'下滑滚动第{scroll_count}次 / 最大滚动{MAX_SCROLL_COUNT}次')
 
 def write_to_csv(video_id, index, level, parent_nickname, parent_user_id, nickname, user_id, content, time, likes):
+
+    if not global_settings["scrap"]:
+        return
+
     file_exists = os.path.isfile(f'{video_id}.csv')
     max_retries = 50
     retries = 0
@@ -275,6 +295,10 @@ def extract_sub_reply(video_id, progress, first_level_nickname, first_level_user
                 sub_reply_user_id = sub_reply_item.find("div", class_="sub-reply-avatar")["data-user-id"]
                 sub_reply_text = sub_reply_item.find("span", class_="reply-content").text
                 sub_reply_time = sub_reply_item.find("span", class_="sub-reply-time").text
+
+                sub_like_icon = sub_reply_item.find("i", class_="sub-like-icon")
+                click_like_icon(driver, sub_like_icon)
+
                 try:
                     sub_reply_likes = sub_reply_item.find("span", class_="sub-reply-like").find("span").text
                 except AttributeError:
@@ -290,6 +314,26 @@ def extract_sub_reply(video_id, progress, first_level_nickname, first_level_user
 
         progress['sub_page'] += 1
         save_progress(progress)
+
+
+# 点赞！
+def click_like_icon(driver, like_icon):
+    #如果点赞功能未开启
+    if not global_settings["click_like"]:
+        return
+    # 如果点赞按钮还没有点亮
+    if "liked" not in like_icon['class']:
+        # 获取点赞按钮的xpath
+        xpath = xpath_soup(like_icon)
+        # 使用xpath查到driver元素
+        selenium_element_like_icon = driver.find_element(By.XPATH, xpath)
+        # 将屏幕滚动到点赞按钮位置
+        driver.execute_script("arguments[0].scrollIntoView();", selenium_element_like_icon)
+        # 点赞 狠狠地点赞
+        selenium_element_like_icon.click()
+        # 点赞结束随机休息0.2-0.4秒 防止给判定脚本封号
+        time.sleep(random.uniform(0.2, 0.4))
+
 
 def main():
     global temp_dir
@@ -399,13 +443,8 @@ def main():
                 first_level_time = first_level_time_element.text if first_level_time_element is not None else ''
 
                 like_icon = reply_item.find("i", class_="like-icon")
-                if "liked" not in like_icon['class']:
-                    print("评论尚未点赞")
-                    xpath = xpath_soup(like_icon)
-                    selenium_element_like_icon = driver.find_element(By.XPATH,xpath)
-                    dz = driver.execute_script("arguments[0].scrollIntoView();", selenium_element_like_icon)
-                    selenium_element_like_icon.click()
-                    time.sleep(1)
+                click_like_icon(driver, like_icon)
+
                 try:
                     first_level_likes = reply_item.find("span", class_="reply-like").find("span").text
                 except AttributeError:
