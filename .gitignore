@@ -130,3 +130,6 @@ dmypy.json
 
 cookies.pkl
 progress.txt
+*.csv
+/temp
+/.idea

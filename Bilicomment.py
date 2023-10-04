@@ -337,9 +337,9 @@ def click_like_icon(driver, like_icon):
 
 def main():
     global temp_dir
-    # 代码文件所在的文件夹内创建一个新的文件夹，作为缓存目录。如果想自行设定目录，请修改下面代码
+    # 代码文件所在的子目录temp 文件夹内创建一个新的文件夹，作为缓存目录。如果想自行设定目录，请修改下面代码
     current_folder = os.path.dirname(os.path.abspath(__file__))
-    temp_dir = tempfile.mkdtemp(dir=current_folder)
+    temp_dir = tempfile.mkdtemp(dir=current_folder+"/temp")
 
     # 首次登录获取cookie文件
     cookies_file = 'cookies.pkl'
@@ -357,7 +357,7 @@ def main():
     chrome_options.add_argument('--disable-plugins-discovery')
     chrome_options.add_argument('--mute-audio')
     # 开启无头模式，禁用视频、音频、图片加载，开启无痕模式，减少内存占用
-    #chrome_options.add_argument('--headless')   # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
+    chrome_options.add_argument('--headless')   # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
     chrome_options.add_argument("--disable-plugins-discovery")
     chrome_options.add_argument("--mute-audio")
     chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
@@ -456,7 +456,7 @@ def main():
                                  time=first_level_time, likes=first_level_likes)
                     progress["write_parent"] = 1
                     print(
-                        f'第{progress["video_count"] + 1}个视频{video_id}-第{progress["first_comment_index"] + 1}个一级评论已写入csv。正在查看这个一级评论有没有二级评论')
+                        f'第{progress["video_count"] + 1}个视频{video_id}-第{progress["first_comment_index"] + 1}个一级评论已完成处理。正在查看这个一级评论有没有二级评论')
 
                 view_more_buttons = driver.find_elements(By.XPATH, f".//div[@class='reply-item'][{i+1}]//span[@class='view-more-btn']")
 
@@ -504,7 +504,7 @@ def main():
                         if not found_next_button:
                             break
 
-                print(f'第{progress["video_count"]+1}个视频{video_id}-第{progress["first_comment_index"]+1}个一级评论下的全部内容已完成爬取')
+                print(f'第{progress["video_count"]+1}个视频{video_id}-第{progress["first_comment_index"]+1}个一级评论下的全部内容已完成处理')
 
                 progress["first_comment_index"] += 1
                 progress["write_parent"] = 0
