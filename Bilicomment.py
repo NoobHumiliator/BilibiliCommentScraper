@@ -20,6 +20,7 @@ import json
 import sys
 import tempfile
 import shutil
+from xpath_soup import xpath_soup
 
 def write_error_log(message):
     with open("video_errorlist.txt", "a") as file:
@@ -312,7 +313,7 @@ def main():
     chrome_options.add_argument('--disable-plugins-discovery')
     chrome_options.add_argument('--mute-audio')
     # 开启无头模式，禁用视频、音频、图片加载，开启无痕模式，减少内存占用
-    chrome_options.add_argument('--headless')   # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
+    #chrome_options.add_argument('--headless')   # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
     chrome_options.add_argument("--disable-plugins-discovery")
     chrome_options.add_argument("--mute-audio")
     chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
@@ -369,6 +370,13 @@ def main():
                 progress["video_count"] += 1
                 continue
 
+            # 删掉B站Header， 阻挡了点赞操作
+            bili_main_header = driver.find_element(By.XPATH,"//*[@id=\"biliMainHeader\"]/div/div")
+            driver.execute_script("""
+            var element = arguments[0];
+            element.remove();
+            """, bili_main_header)
+
             soup = BeautifulSoup(driver.page_source, "html.parser")
             all_reply_items = soup.find_all("div", class_="reply-item")
 
@@ -390,6 +398,14 @@ def main():
                 first_level_time_element = reply_item.find("span", class_="reply-time")
                 first_level_time = first_level_time_element.text if first_level_time_element is not None else ''
 
+                like_icon = reply_item.find("i", class_="like-icon")
+                if "liked" not in like_icon['class']:
+                    print("评论尚未点赞")
+                    xpath = xpath_soup(like_icon)
+                    selenium_element_like_icon = driver.find_element(By.XPATH,xpath)
+                    dz = driver.execute_script("arguments[0].scrollIntoView();", selenium_element_like_icon)
+                    selenium_element_like_icon.click()
+                    time.sleep(1)
                 try:
                     first_level_likes = reply_item.find("span", class_="reply-like").find("span").text
                 except AttributeError:
