@@ -1,3 +1,4 @@
+import platform
 import random
 
 import yaml
@@ -343,12 +344,20 @@ def main():
 
     # 首次登录获取cookie文件
     cookies_file = 'cookies.pkl'
-    print("测试cookies文件是否已获取。若无，请在弹出的窗口中登录b站账号，登录完成后，窗口将关闭；若有，窗口会立即关闭")
-    driver = webdriver.Chrome(service=Service(executable_path=ChromeDriverManager().install()))
-    driver.get('https://space.bilibili.com/')
-    if not load_cookies(driver, cookies_file):
-        manual_login(driver, cookies_file)
-    driver.quit()
+
+    if platform.system()== "Windows":
+        print("测试cookies文件是否已获取。若无，请在弹出的窗口中登录b站账号，登录完成后，窗口将关闭；若有，窗口会立即关闭")
+        driver = webdriver.Chrome(service=Service(executable_path=ChromeDriverManager().install()))
+        driver.get('https://space.bilibili.com/')
+        if not load_cookies(driver, cookies_file):
+            manual_login(driver, cookies_file)
+        driver.quit()
+
+    if platform.system()== "Linux":
+        print("请先准备好在Windows上运行一次准备好cookies.pkl文件")
+        print("请把cookies.pkl文件放在项目根目录，如果没有会报错")
+        if not os.path.exists(cookies_file):
+            raise Exception("Linux系统找不到cookie文件")
 
     # 设置Chrome浏览器参数
     chrome_options = Options()
@@ -356,6 +365,7 @@ def main():
     chrome_options.add_argument(f'--user-data-dir={temp_dir}')
     chrome_options.add_argument('--disable-plugins-discovery')
     chrome_options.add_argument('--mute-audio')
+    chrome_options.add_argument('--no-sandbox')
     # 开启无头模式，禁用视频、音频、图片加载，开启无痕模式，减少内存占用
     chrome_options.add_argument('--headless')   # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
     chrome_options.add_argument("--disable-plugins-discovery")
