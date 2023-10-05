@@ -340,6 +340,8 @@ def main():
     global temp_dir
     # 代码文件所在的子目录temp 文件夹内创建一个新的文件夹，作为缓存目录。如果想自行设定目录，请修改下面代码
     current_folder = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.exists(current_folder+"/temp"):
+        os.makedirs(current_folder+"/temp")
     temp_dir = tempfile.mkdtemp(dir=current_folder+"/temp")
 
     # 首次登录获取cookie文件
