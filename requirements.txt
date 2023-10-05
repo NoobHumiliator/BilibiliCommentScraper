@@ -2,4 +2,3 @@ selenium
 beautifulsoup4
 webdriver-manager
 pyyaml
-schedule
