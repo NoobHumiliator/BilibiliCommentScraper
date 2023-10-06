@@ -25,7 +25,7 @@ import sys
 import tempfile
 import shutil
 from xpath_soup import xpath_soup
-
+from pyvirtualdisplay import Display
 
 global_settings = {}
 
@@ -34,13 +34,14 @@ with open("config.yaml", "rb") as fp:
     global_settings["click_like"] = yconfig["functions"]["click_like"]
     global_settings["scrap"] = yconfig["functions"]["scrap"]
 
+
 def write_error_log(message):
     with open("video_errorlist.txt", "a") as file:
         file.write(message + "\n")
 
-def save_progress(progress):
 
-    #如果爬虫功能未启用，不写进度
+def save_progress(progress):
+    # 如果爬虫功能未启用，不写进度
     if not global_settings["scrap"]:
         return
 
@@ -61,9 +62,11 @@ def save_progress(progress):
         print("进度存档时遇到权限错误，且已达到最大重试次数50次，退出程序")
         sys.exit(1)
 
+
 def save_cookies(driver, cookies_file):
     with open(cookies_file, 'wb') as f:
         pickle.dump(driver.get_cookies(), f)
+
 
 def load_cookies(driver, cookies_file):
     if os.path.exists(cookies_file):
@@ -74,10 +77,12 @@ def load_cookies(driver, cookies_file):
         return True
     return False
 
+
 def manual_login(driver, cookies_file):
     input("请登录，登录成功跳转后，按回车键继续...")
     save_cookies(driver, cookies_file)  # 登录后保存cookie到本地
     print("程序正在继续运行")
+
 
 def check_page_status(driver):
     try:
@@ -88,6 +93,7 @@ def check_page_status(driver):
         driver.refresh()
         time.sleep(5)
         return False
+
 
 def click_view_more(driver, view_more_button, i):
     success = False
@@ -106,7 +112,8 @@ def click_view_more(driver, view_more_button, i):
             if not check_page_status(driver):
                 try:
                     scroll_to_bottom(driver)
-                    view_more_buttons = driver.find_elements(By.XPATH, f".//div[@class='reply-item'][{i+1}]//span[@class='view-more-btn']")
+                    view_more_buttons = driver.find_elements(By.XPATH,
+                                                             f".//div[@class='reply-item'][{i + 1}]//span[@class='view-more-btn']")
                     WebDriverWait(driver, 30).until(
                         EC.element_to_be_clickable((By.XPATH, ".//span[@class='view-more-btn']")))
                     driver.execute_script("arguments[0].scrollIntoView();", view_more_buttons[0])
@@ -115,6 +122,7 @@ def click_view_more(driver, view_more_button, i):
                 except Exception as e:
                     print(f"点击查看全部按钮时发生错误 - 刷新重试时出错{e}...")
                     raise
+
 
 def click_next_page(driver, next_page_button, i, progress):
     try:
@@ -144,6 +152,7 @@ def click_next_page(driver, next_page_button, i, progress):
                 print(f"点击查看全部按钮时发生错误 - 刷新重试时出错{e}...")
                 raise
 
+
 def close_mini_player(driver):
     try:
         close_button = WebDriverWait(driver, 30).until(
@@ -151,12 +160,15 @@ def close_mini_player(driver):
         )
         close_button.click()
     except Exception as e:
-        print(f"[这不影响程序正常运行，可能悬浮小窗已被关闭（加这段只是因为悬浮小窗可能遮挡按钮，把浏览器拉宽可以避免按钮被遮挡）]未找到关闭按钮或无法关闭悬浮小窗: {e}")
+        print(
+            f"[这不影响程序正常运行，可能悬浮小窗已被关闭（加这段只是因为悬浮小窗可能遮挡按钮，把浏览器拉宽可以避免按钮被遮挡）]未找到关闭按钮或无法关闭悬浮小窗: {e}")
+
 
 def restart_browser(driver):
     driver.quit()
     shutil.rmtree(temp_dir)
     main()
+
 
 def check_next_page_button(driver):
     next_buttons = driver.find_elements(By.CSS_SELECTOR, ".pagination-btn")
@@ -164,6 +176,7 @@ def check_next_page_button(driver):
         if "下一页" in button.text:
             return True
     return False
+
 
 def navigate_to_sub_comment_page(i, progress, driver):
     current_page = 1
@@ -185,6 +198,7 @@ def navigate_to_sub_comment_page(i, progress, driver):
                     break
                 except ElementClickInterceptedException:
                     print("下一页按钮 is not clickable, skipping...")
+
 
 def scroll_to_bottom(driver):
     global mini_flag
@@ -236,8 +250,8 @@ def scroll_to_bottom(driver):
         scroll_count += 1
         print(f'下滑滚动第{scroll_count}次 / 最大滚动{MAX_SCROLL_COUNT}次')
 
-def write_to_csv(video_id, index, level, parent_nickname, parent_user_id, nickname, user_id, content, time, likes):
 
+def write_to_csv(video_id, index, level, parent_nickname, parent_user_id, nickname, user_id, content, time, likes):
     if not global_settings["scrap"]:
         return
 
@@ -248,7 +262,8 @@ def write_to_csv(video_id, index, level, parent_nickname, parent_user_id, nickna
     while retries < max_retries:
         try:
             with open(f'{video_id}.csv', mode='a', encoding='utf-8', newline='') as csvfile:
-                fieldnames = ['编号', '隶属关系', '被评论者昵称', '被评论者ID', '昵称', '用户ID', '评论内容', '发布时间',
+                fieldnames = ['编号', '隶属关系', '被评论者昵称', '被评论者ID', '昵称', '用户ID', '评论内容',
+                              '发布时间',
                               '点赞数']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -276,8 +291,8 @@ def write_to_csv(video_id, index, level, parent_nickname, parent_user_id, nickna
         print("将爬取到的数据写入csv时遇到权限错误，且已达到最大重试次数50次，退出程序")
         sys.exit(1)
 
-def extract_sub_reply(video_id, progress, first_level_nickname, first_level_user_id, driver):
 
+def extract_sub_reply(video_id, progress, first_level_nickname, first_level_user_id, driver):
     i = progress["first_comment_index"]
 
     sub_soup = BeautifulSoup(driver.page_source, "html.parser")
@@ -307,7 +322,8 @@ def extract_sub_reply(video_id, progress, first_level_nickname, first_level_user
 
                 write_to_csv(video_id, index=i, level='二级评论', parent_nickname=first_level_nickname,
                              parent_user_id=first_level_user_id,
-                             nickname=sub_reply_nickname, user_id=sub_reply_user_id, content=sub_reply_text, time=sub_reply_time,
+                             nickname=sub_reply_nickname, user_id=sub_reply_user_id, content=sub_reply_text,
+                             time=sub_reply_time,
                              likes=sub_reply_likes)
 
             except NoSuchElementException:
@@ -319,7 +335,7 @@ def extract_sub_reply(video_id, progress, first_level_nickname, first_level_user
 
 # 点赞！
 def click_like_icon(driver, like_icon):
-    #如果点赞功能未开启
+    # 如果点赞功能未开启
     if not global_settings["click_like"]:
         return
     # 如果点赞按钮还没有点亮
@@ -340,14 +356,12 @@ def main():
     global temp_dir
     # 代码文件所在的子目录temp 文件夹内创建一个新的文件夹，作为缓存目录。如果想自行设定目录，请修改下面代码
     current_folder = os.path.dirname(os.path.abspath(__file__))
-    if not os.path.exists(current_folder+"/temp"):
-        os.makedirs(current_folder+"/temp")
-    temp_dir = tempfile.mkdtemp(dir=current_folder+"/temp")
+    temp_dir = tempfile.mkdtemp(dir=current_folder + "/temp")
 
     # 首次登录获取cookie文件
     cookies_file = 'cookies.pkl'
 
-    if platform.system()== "Windows":
+    if platform.system() == "Windows":
         print("测试cookies文件是否已获取。若无，请在弹出的窗口中登录b站账号，登录完成后，窗口将关闭；若有，窗口会立即关闭")
         driver = webdriver.Chrome(service=Service(executable_path=ChromeDriverManager().install()))
         driver.get('https://space.bilibili.com/')
@@ -355,11 +369,14 @@ def main():
             manual_login(driver, cookies_file)
         driver.quit()
 
-    if platform.system()== "Linux":
-        print("请先准备好在Windows上运行一次准备好cookies.pkl文件")
-        print("请把cookies.pkl文件放在项目根目录，如果没有会报错")
+    display = None
+    if platform.system() == "Linux":
+        print("Linux请先准备好cookies.pkl文件放在项目根目录，如果没有会报错")
         if not os.path.exists(cookies_file):
             raise Exception("Linux系统找不到cookie文件")
+        # 创建一个虚拟显示
+        display = Display(visible=0, size=(1280, 768))
+        display.start()
 
     # 设置Chrome浏览器参数
     chrome_options = Options()
@@ -369,7 +386,7 @@ def main():
     chrome_options.add_argument('--mute-audio')
     chrome_options.add_argument('--no-sandbox')
     # 开启无头模式，禁用视频、音频、图片加载，开启无痕模式，减少内存占用
-    chrome_options.add_argument('--headless')   # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
+    chrome_options.add_argument('--headless')  # 开启无头模式以节省内存占用，较低版本的浏览器可能不支持这一功能
     chrome_options.add_argument("--disable-plugins-discovery")
     chrome_options.add_argument("--mute-audio")
     chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
@@ -404,7 +421,8 @@ def main():
             video_id_search = re.search(r'https://www\.bilibili\.com/video/([^/?]+)', url)
             if video_id_search:
                 video_id = video_id_search.group(1)
-                print(f'开始爬取第{progress["video_count"]+1}个视频{video_id}：先会不断向下滚动至页面最底部，以加载全部页面。对于超大评论量的视频，这一步会相当花时间，请耐心等待')
+                print(
+                    f'开始爬取第{progress["video_count"] + 1}个视频{video_id}：先会不断向下滚动至页面最底部，以加载全部页面。对于超大评论量的视频，这一步会相当花时间，请耐心等待')
             else:
                 error_message = f'第{progress["video_count"] + 1}个视频被跳过：无法从 URL {url}中提取 video_id'
                 print(error_message)
@@ -427,7 +445,7 @@ def main():
                 continue
 
             # 删掉B站Header， 阻挡了点赞操作
-            bili_main_header = driver.find_element(By.XPATH,"//*[@id=\"biliMainHeader\"]/div/div")
+            bili_main_header = driver.find_element(By.XPATH, "//*[@id=\"biliMainHeader\"]/div/div")
             driver.execute_script("""
             var element = arguments[0];
             element.remove();
@@ -438,7 +456,7 @@ def main():
 
             for i, reply_item in enumerate(all_reply_items):
 
-                if(i < progress["first_comment_index"]):
+                if (i < progress["first_comment_index"]):
                     continue
 
                 first_level_nickname_element = reply_item.find("div", class_="user-name")
@@ -464,17 +482,20 @@ def main():
 
                 if (progress["write_parent"] == 0):
                     write_to_csv(video_id, index=i, level='一级评论', parent_nickname='up主', parent_user_id='up主',
-                                 nickname=first_level_nickname, user_id=first_level_user_id, content=first_level_content,
+                                 nickname=first_level_nickname, user_id=first_level_user_id,
+                                 content=first_level_content,
                                  time=first_level_time, likes=first_level_likes)
                     progress["write_parent"] = 1
                     print(
                         f'第{progress["video_count"] + 1}个视频{video_id}-第{progress["first_comment_index"] + 1}个一级评论已完成处理。正在查看这个一级评论有没有二级评论')
 
-                view_more_buttons = driver.find_elements(By.XPATH, f".//div[@class='reply-item'][{i+1}]//span[@class='view-more-btn']")
+                view_more_buttons = driver.find_elements(By.XPATH,
+                                                         f".//div[@class='reply-item'][{i + 1}]//span[@class='view-more-btn']")
 
                 clicked_view_more = False
                 if len(view_more_buttons) > 0:
-                    WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, "//span[@class='view-more-btn']")))
+                    WebDriverWait(driver, 30).until(
+                        EC.element_to_be_clickable((By.XPATH, "//span[@class='view-more-btn']")))
                     try:
                         click_view_more(driver, view_more_buttons[0], i)
                         time.sleep(2)
@@ -516,7 +537,8 @@ def main():
                         if not found_next_button:
                             break
 
-                print(f'第{progress["video_count"]+1}个视频{video_id}-第{progress["first_comment_index"]+1}个一级评论下的全部内容已完成处理')
+                print(
+                    f'第{progress["video_count"] + 1}个视频{video_id}-第{progress["first_comment_index"] + 1}个一级评论下的全部内容已完成处理')
 
                 progress["first_comment_index"] += 1
                 progress["write_parent"] = 0
@@ -536,6 +558,9 @@ def main():
             restart_browser(driver)
 
     driver.quit()
+    if display:
+        display.stop()
+
 
 if __name__ == "__main__":
     main()
