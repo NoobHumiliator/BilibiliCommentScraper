@@ -1,4 +1,5 @@
-# Bilibili视频评论爬虫
+请关注UP技术爬爬虾，全网同昵称
+# Bilibili视频评论爬虫+ 批量点赞
 
 * 能**批量**爬取B站多个视频的评论，使用Selenium而非B站api，能爬取到更**全面**的数据。
 * 能够**断点续爬**，可以随时关闭程序，等到有网络时再继续运行。
@@ -11,6 +12,15 @@
 2. **批量爬取多个视频的评论**：把要爬取的网址写进 video_list.txt 即可，每个视频的评论都会输出一个以视频ID命名的 CSV 文件。
 3. **只需一次登录**：一次手动登录后，程序会记下你的 cookies ，存放在代码同级文件夹 cookies.pkl 内。在 cookies.pkl 被手动删除前，程序每次运行都会自动登录（cookies失效后请删除cookies.pkl文件）。
 4. **断点续爬**：中断后，爬虫可以根据 progress.txt 文件中的进度继续爬取。写入到一半的 CSV 文件也会继续写入。
+
+## 使用方法
+1. config.yaml 有两个开关 控制爬虫功能或点赞功能可以选择性开启
+2. 首先在电脑上下载Chrome浏览器，
+3. 安装Python3, 并且安装python依赖
+   使用以下命令
+   pip3 install -i https://mirrors.aliyun.com/pypi/simple -r requirements.txt
+4. 将要爬取评论的视频 URL 列表放入名为 video_list.txt 的文件中，每行一个 URL。
+
 
 ### 关于断点续爬与progress
 * 断点续爬功能依托progress.txt记录实现：程序运行时，如果代码同级文件夹内存在progress.txt文件，它会读取其中进度；如果没有，则自动创建。
@@ -26,7 +36,7 @@
 
 ## 安装
 1. 安装 Python 3。
-2. 安装所需的库。在命令行中输入以下命令：pip install selenium beautifulsoup4 webdriver-manager
+2. 安装所需的库。在命令行中输入以下命令：pip3 install -i https://mirrors.aliyun.com/pypi/simple -r requirements.txt 
 
 ## 使用
 1. 将要爬取评论的视频 URL 列表放入名为 video_list.txt 的文件中，每行一个 URL。
