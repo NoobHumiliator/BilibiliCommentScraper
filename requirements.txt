@@ -2,3 +2,6 @@ selenium
 beautifulsoup4
 webdriver-manager
 pyyaml
+EasyProcess
+xvfbwrapper
+pyvirtualdisplay
